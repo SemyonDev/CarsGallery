@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/galleryFragment">
+
+    <fragment
+        android:id="@+id/galleryFragment"
+        android:name="com.test.carsgallery.presentation.screens.gallery.GalleryFragment"
+        android:label="@string/app_name"
+        tools:layout="@layout/fragment_gallery">
+
+        <action
+            android:id="@+id/action_gallery_to_detail"
+            app:destination="@id/imageDetailFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/imageDetailFragment"
+        android:name="com.test.carsgallery.presentation.screens.imagedetails.ImageDetailFragment"
+        android:label="@string/image_detail_title"
+        tools:layout="@layout/fragment_image_detail">
+
+        <argument
+            android:name="imageId"
+            app:argType="string" />
+        <argument
+            android:name="imageUrl"
+            app:argType="string" />
+    </fragment>
+
+</navigation>
