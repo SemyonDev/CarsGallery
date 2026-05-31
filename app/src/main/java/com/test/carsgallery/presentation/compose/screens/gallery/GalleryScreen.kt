@@ -33,6 +33,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -59,7 +60,12 @@ fun GalleryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isGridMode by viewModel.isGridMode.collectAsStateWithLifecycle()
-    val isRefreshing = uiState is UiState.Loading
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    // reset the pull-to-refresh indicator once the load settles
+    LaunchedEffect(uiState) {
+        if (uiState !is UiState.Loading) isRefreshing = false
+    }
 
     var menuExpanded by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -107,7 +113,10 @@ fun GalleryScreen(
     ) { innerPadding ->
         PullToRefreshBox(
             isRefreshing = isRefreshing,
-            onRefresh = { viewModel.loadImages() },
+            onRefresh = {
+                isRefreshing = true
+                viewModel.loadImages()
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
@@ -198,14 +207,21 @@ private fun GalleryItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var isLoading by remember { mutableStateOf(true) }
+
     Card(modifier = modifier.clickable(onClick = onClick)) {
         Box {
             ImageLoaderImage(
                 url = item.imageUrl,
+                onSuccess = { isLoading = false },
+                onError = { isLoading = false },
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f),
             )
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
             Text(
                 text = item.id,
                 style = MaterialTheme.typography.labelSmall,
