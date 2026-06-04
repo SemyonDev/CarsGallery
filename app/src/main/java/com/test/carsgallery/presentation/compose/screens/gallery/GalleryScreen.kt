@@ -32,8 +32,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -41,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -48,6 +49,7 @@ import com.test.carsgallery.R
 import com.test.carsgallery.domain.model.ImageItem
 import com.test.carsgallery.presentation.UiState
 import com.test.carsgallery.presentation.compose.components.ImageLoaderImage
+import com.test.carsgallery.presentation.compose.theme.CarsGalleryTheme
 import com.test.carsgallery.presentation.screens.gallery.GalleryViewModel
 import com.zipoapps.imageloader.ImageLoader
 import kotlinx.coroutines.launch
@@ -60,9 +62,34 @@ fun GalleryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isGridMode by viewModel.isGridMode.collectAsStateWithLifecycle()
+
+    GalleryScreenContent(
+        uiState = uiState,
+        isGridMode = isGridMode,
+        onToggleLayout = { viewModel.toggleLayoutMode() },
+        onClearCache = {
+            ImageLoader.invalidateAll()
+            viewModel.loadImages()
+        },
+        onRetry = { viewModel.loadImages() },
+        onRefresh = { viewModel.loadImages() },
+        onNavigateToDetail = onNavigateToDetail,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GalleryScreenContent(
+    uiState: UiState<List<ImageItem>>,
+    isGridMode: Boolean,
+    onToggleLayout: () -> Unit,
+    onClearCache: () -> Unit,
+    onRetry: () -> Unit,
+    onRefresh: () -> Unit,
+    onNavigateToDetail: (imageId: String, imageUrl: String) -> Unit,
+) {
     var isRefreshing by remember { mutableStateOf(false) }
 
-    // reset the pull-to-refresh indicator once the load settles
     LaunchedEffect(uiState) {
         if (uiState !is UiState.Loading) isRefreshing = false
     }
@@ -92,15 +119,14 @@ fun GalleryScreen(
                                 )
                             },
                             onClick = {
-                                viewModel.toggleLayoutMode()
+                                onToggleLayout()
                                 menuExpanded = false
                             },
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.clear_cache)) },
                             onClick = {
-                                ImageLoader.invalidateAll()
-                                viewModel.loadImages()
+                                onClearCache()
                                 menuExpanded = false
                                 scope.launch { snackbarHostState.showSnackbar(cacheClearedMessage) }
                             },
@@ -115,7 +141,7 @@ fun GalleryScreen(
             isRefreshing = isRefreshing,
             onRefresh = {
                 isRefreshing = true
-                viewModel.loadImages()
+                onRefresh()
             },
             modifier = Modifier
                 .fillMaxSize()
@@ -139,7 +165,7 @@ fun GalleryScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(16.dp),
                         )
-                        Button(onClick = { viewModel.loadImages() }) {
+                        Button(onClick = onRetry) {
                             Text(stringResource(R.string.action_retry))
                         }
                     }
@@ -232,3 +258,89 @@ private fun GalleryItem(
         }
     }
 }
+
+// region Previews
+
+private val previewItems = listOf(
+    ImageItem(id = "car_001", imageUrl = "https://example.com/car1.jpg"),
+    ImageItem(id = "car_002", imageUrl = "https://example.com/car2.jpg"),
+    ImageItem(id = "car_003", imageUrl = "https://example.com/car3.jpg"),
+    ImageItem(id = "car_004", imageUrl = "https://example.com/car4.jpg"),
+)
+
+@Preview(showBackground = true, name = "Gallery – Loading")
+@Composable
+private fun GalleryScreenLoadingPreview() {
+    CarsGalleryTheme {
+        GalleryScreenContent(
+            uiState = UiState.Loading,
+            isGridMode = true,
+            onToggleLayout = {},
+            onClearCache = {},
+            onRetry = {},
+            onRefresh = {},
+            onNavigateToDetail = { _, _ -> },
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Gallery – Error")
+@Composable
+private fun GalleryScreenErrorPreview() {
+    CarsGalleryTheme {
+        GalleryScreenContent(
+            uiState = UiState.Error(messageResId = R.string.error_loading),
+            isGridMode = true,
+            onToggleLayout = {},
+            onClearCache = {},
+            onRetry = {},
+            onRefresh = {},
+            onNavigateToDetail = { _, _ -> },
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Gallery – Grid")
+@Composable
+private fun GalleryScreenGridPreview() {
+    CarsGalleryTheme {
+        GalleryScreenContent(
+            uiState = UiState.Success(data = previewItems),
+            isGridMode = true,
+            onToggleLayout = {},
+            onClearCache = {},
+            onRetry = {},
+            onRefresh = {},
+            onNavigateToDetail = { _, _ -> },
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Gallery – List")
+@Composable
+private fun GalleryScreenListPreview() {
+    CarsGalleryTheme {
+        GalleryScreenContent(
+            uiState = UiState.Success(data = previewItems),
+            isGridMode = false,
+            onToggleLayout = {},
+            onClearCache = {},
+            onRetry = {},
+            onRefresh = {},
+            onNavigateToDetail = { _, _ -> },
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "GalleryItem")
+@Composable
+private fun GalleryItemPreview() {
+    CarsGalleryTheme {
+        GalleryItem(
+            item = ImageItem(id = "car_001", imageUrl = "https://example.com/car1.jpg"),
+            onClick = {},
+        )
+    }
+}
+
+// endregion
