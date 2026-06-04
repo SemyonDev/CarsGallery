@@ -30,7 +30,7 @@ app/src/main/java/com/test/carsgallery/
 │   ├── datasource/RemoteDataSource.kt    Data-layer interface
 │   ├── remote/
 │   │   ├── api/GalleryApi.kt             Retrofit suspend interface
-│   │   ├── dto/ImageDto.kt               Network DTO (Gson)
+│   │   ├── dto/ImageDto.kt               Network DTO (Moshi)
 │   │   └── RemoteDataSourceImpl.kt       DTO → domain mapping
 │   └── repository/GalleryRepositoryImpl.kt  IOException/HttpException → NetworkException
 │
@@ -89,7 +89,7 @@ GalleryAdapter.bind(item)
 | Concern | Solution |
 |---|---|
 | Dependency injection | Hilt |
-| Networking | Retrofit + OkHttp + Gson |
+| Networking | Retrofit + OkHttp + Moshi |
 | Async | Kotlin Coroutines + StateFlow |
 | Navigation | Navigation Component (fragment-ktx) |
 | Image loading | Custom `:image-loader` module |
