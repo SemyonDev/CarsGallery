@@ -73,6 +73,7 @@ app/src/main/java/com/test/carsgallery/
     └── compose/
         ├── common/                       Shared Compose code for both Compose flows
         │   ├── theme/Theme.kt            CarsGalleryTheme (Material 3, dynamic color)
+        │   ├── PreviewSamples.kt         Sample data for @Preview functions
         │   └── components/
         │       ├── NetworkImage.kt       Bridges :image-loader into Compose (AndroidView + ImageView)
         │       ├── GalleryGrid.kt        Grid/list rendering + per-item progress
@@ -117,6 +118,14 @@ UI states, but differs in toolkit, navigation, and state-management style:
 
 The two Compose flows run as their own `@AndroidEntryPoint` activities to keep the Navigation 3 world
 cleanly separated from the fragment / Navigation Component world.
+
+### Compose previews
+
+Every Compose screen ships `@Preview` functions for its UI states (gallery: Success / Loading / Error;
+detail: Loaded / Loading). Because the screens are stateless and driven by plain state objects, each
+preview just passes a hand-built state with no-op callbacks. `NetworkImage` detects
+`LocalInspectionMode` and draws a static placeholder instead of running the loader, so previews render
+without a device or network.
 
 ---
 
