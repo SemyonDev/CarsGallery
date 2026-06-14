@@ -3,16 +3,13 @@ package com.test.carsgallery.presentation.compose.mvi.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.test.carsgallery.domain.usecase.GetImagesUseCase
 import com.test.carsgallery.presentation.compose.mvi.detail.DetailEffect
 import com.test.carsgallery.presentation.compose.mvi.detail.DetailScreen
@@ -20,62 +17,64 @@ import com.test.carsgallery.presentation.compose.mvi.detail.DetailViewModel
 import com.test.carsgallery.presentation.compose.mvi.gallery.GalleryEffect
 import com.test.carsgallery.presentation.compose.mvi.gallery.GalleryScreen
 import com.test.carsgallery.presentation.compose.mvi.gallery.GalleryViewModel
-
-/** Navigation 3 keys for the MVI flow. */
-sealed interface MviNavKey : NavKey
-
-data object GalleryKey : MviNavKey
-
-data class DetailKey(val imageId: String, val imageUrl: String) : MviNavKey
+import kotlinx.serialization.Serializable
 
 /**
- * Navigation 3 host for the compose_mvi flow.
+ * Type-safe Navigation 2 (Navigation Compose) routes for the MVI flow. Each route is a
+ * `@Serializable` destination; the data class carries its arguments and the library handles
+ * encoding, so the (slash-bearing) image URL needs no manual escaping.
+ */
+@Serializable
+data object GalleryRoute
+
+@Serializable
+data class DetailRoute(val imageId: String, val imageUrl: String)
+
+/**
+ * Navigation Compose (Navigation 2) host for the compose_mvi flow.
  *
- * Mirrors the MVVM host's structure, but navigation is driven by the ViewModels' one-shot effect
- * streams: each entry collects its store's effects and translates them into back-stack mutations,
- * keeping the screens free of any direct navigation calls.
+ * Deliberately uses Navigation 2 — not Navigation 3 like compose_mvvm — to contrast the two
+ * systems. Here a [androidx.navigation.NavHostController] owns the back stack and ViewModels are
+ * scoped to each `NavBackStackEntry` automatically (no decorators needed). Navigation stays out of
+ * the screens: each destination collects its ViewModel's one-shot effects and drives the controller.
  */
 @Composable
 fun MviNavHost(
     getImagesUseCase: GetImagesUseCase,
     modifier: Modifier = Modifier,
 ) {
-    val backStack = remember { mutableStateListOf<NavKey>(GalleryKey) }
+    val navController = rememberNavController()
 
-    NavDisplay(
-        backStack = backStack,
+    NavHost(
+        navController = navController,
+        startDestination = GalleryRoute,
         modifier = modifier,
-        onBack = { backStack.removeLastOrNull() },
-        entryDecorators = listOf(
-            rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator(),
-        ),
-        entryProvider = entryProvider {
-            entry<GalleryKey> {
-                val viewModel: GalleryViewModel = viewModel { GalleryViewModel(getImagesUseCase) }
-                val state by viewModel.state.collectAsStateWithLifecycle()
-                LaunchedEffect(viewModel) {
-                    viewModel.effects.collect { effect ->
-                        when (effect) {
-                            is GalleryEffect.NavigateToDetail ->
-                                backStack.add(DetailKey(effect.imageId, effect.imageUrl))
-                        }
+    ) {
+        composable<GalleryRoute> {
+            val viewModel: GalleryViewModel = viewModel { GalleryViewModel(getImagesUseCase) }
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            LaunchedEffect(viewModel) {
+                viewModel.effects.collect { effect ->
+                    when (effect) {
+                        is GalleryEffect.NavigateToDetail ->
+                            navController.navigate(DetailRoute(effect.imageId, effect.imageUrl))
                     }
                 }
-                GalleryScreen(state = state, onIntent = viewModel::onIntent)
             }
-            entry<DetailKey> { key ->
-                val viewModel: DetailViewModel = viewModel { DetailViewModel(key.imageId, key.imageUrl) }
-                val state by viewModel.state.collectAsStateWithLifecycle()
-                LaunchedEffect(viewModel) {
-                    viewModel.effects.collect { effect ->
-                        when (effect) {
-                            DetailEffect.NavigateBack -> backStack.removeLastOrNull()
-                        }
+            GalleryScreen(state = state, onIntent = viewModel::onIntent)
+        }
+        composable<DetailRoute> { backStackEntry ->
+            val route = backStackEntry.toRoute<DetailRoute>()
+            val viewModel: DetailViewModel = viewModel { DetailViewModel(route.imageId, route.imageUrl) }
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            LaunchedEffect(viewModel) {
+                viewModel.effects.collect { effect ->
+                    when (effect) {
+                        DetailEffect.NavigateBack -> navController.popBackStack()
                     }
                 }
-                DetailScreen(state = state, onIntent = viewModel::onIntent)
             }
-        },
-    )
+            DetailScreen(state = state, onIntent = viewModel::onIntent)
+        }
+    }
 }

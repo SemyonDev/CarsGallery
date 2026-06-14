@@ -14,5 +14,5 @@
     <string name="home_choose_implementation">Choose an implementation</string>
     <string name="impl_xml">XML (View System + MVVM)</string>
     <string name="impl_compose_mvvm">Compose MVVM (Navigation 3)</string>
-    <string name="impl_compose_mvi">Compose MVI (Navigation 3)</string>
+    <string name="impl_compose_mvi">Compose MVI (Navigation 2)</string>
 </resources>
