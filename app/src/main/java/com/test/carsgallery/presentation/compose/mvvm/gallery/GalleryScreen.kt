@@ -15,11 +15,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.test.carsgallery.R
 import com.test.carsgallery.domain.model.ImageItem
 import com.test.carsgallery.presentation.compose.common.components.ErrorState
 import com.test.carsgallery.presentation.compose.common.components.GalleryGrid
 import com.test.carsgallery.presentation.compose.common.components.LoadingState
+import com.test.carsgallery.presentation.compose.common.previewImageItems
+import com.test.carsgallery.presentation.compose.common.theme.CarsGalleryTheme
 
 /**
  * MVVM gallery screen. Stateless: it renders [uiState] and forwards user actions as callbacks.
@@ -71,5 +74,47 @@ fun GalleryScreen(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "Gallery · Success (grid)", showBackground = true)
+@Composable
+private fun GalleryScreenSuccessPreview() {
+    CarsGalleryTheme {
+        GalleryScreen(
+            uiState = GalleryUiState(
+                content = GalleryUiState.Content.Success(previewImageItems),
+                isGrid = true,
+            ),
+            onToggleGrid = {},
+            onRetry = {},
+            onImageClick = {},
+        )
+    }
+}
+
+@Preview(name = "Gallery · Loading", showBackground = true)
+@Composable
+private fun GalleryScreenLoadingPreview() {
+    CarsGalleryTheme {
+        GalleryScreen(
+            uiState = GalleryUiState(content = GalleryUiState.Content.Loading),
+            onToggleGrid = {},
+            onRetry = {},
+            onImageClick = {},
+        )
+    }
+}
+
+@Preview(name = "Gallery · Error", showBackground = true)
+@Composable
+private fun GalleryScreenErrorPreview() {
+    CarsGalleryTheme {
+        GalleryScreen(
+            uiState = GalleryUiState(content = GalleryUiState.Content.Error(R.string.error_network)),
+            onToggleGrid = {},
+            onRetry = {},
+            onImageClick = {},
+        )
     }
 }

@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.test.carsgallery.domain.model.ImageItem
@@ -133,7 +134,9 @@ private fun LoadingNetworkImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
 ) {
-    var loading by remember(url) { mutableStateOf(true) }
+    // In previews the loader never reports back, so start "loaded" to show the placeholder cleanly.
+    val startLoading = !LocalInspectionMode.current
+    var loading by remember(url) { mutableStateOf(startLoading) }
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         NetworkImage(
             url = url,
