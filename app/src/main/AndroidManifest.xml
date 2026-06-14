@@ -27,6 +27,18 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".presentation.compose.mvvm.ComposeMvvmActivity"
+            android:exported="false"
+            android:label="@string/impl_compose_mvvm"
+            android:theme="@style/Theme.CarsGallery" />
+
+        <activity
+            android:name=".presentation.compose.mvi.ComposeMviActivity"
+            android:exported="false"
+            android:label="@string/impl_compose_mvi"
+            android:theme="@style/Theme.CarsGallery" />
+
     </application>
 
 </manifest>

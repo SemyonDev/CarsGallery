@@ -6,8 +6,13 @@
     <string name="error_loading">Something went wrong. Pull down to retry.</string>
     <string name="error_network">No internet connection.</string>
     <string name="action_retry">Retry</string>
+    <string name="action_back">Back</string>
     <string name="image_detail_title">Image Detail</string>
     <string name="image_id_label">ID:</string>
     <string name="switch_to_list">Switch to List</string>
     <string name="switch_to_grid">Switch to Grid</string>
+    <string name="home_choose_implementation">Choose an implementation</string>
+    <string name="impl_xml">XML (View System + MVVM)</string>
+    <string name="impl_compose_mvvm">Compose MVVM (Navigation 3)</string>
+    <string name="impl_compose_mvi">Compose MVI (Navigation 3)</string>
 </resources>
